@@ -8,13 +8,13 @@ import (
 )
 
 const (
-	NNG_Contract = ""
-	Default_RPC  = "https://bsc-dataseed1.ninicoin.io"
-	// Default_RPC  = "https://bsc-testnet.public.blastapi.io"
+	NNG_Contract = "0x4Dd448987835a5d6067aa0D3e3D0629B7bCDA174"
+	// Default_RPC  = "https://bsc-dataseed1.ninicoin.io"
+	Default_RPC  = "https://bsc-testnet.public.blastapi.io"
 )
 
 var (
-	NNG_Factory = common.HexToAddress("")
+	NNG_Factory = common.HexToAddress("0xB52797449cce9b39a068345c524e3716d81Ed630")
 )
 
 // NngMiner dispatch job to worker

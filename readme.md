@@ -47,7 +47,7 @@ GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o ./build/NNG_Mining ./main.
 
 ```shell
 # for windows
-GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o ./build/NNG_Mining ./main.go
+GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o ./build/NNG_Mining.exe ./main.go
 ```
 
 #### Start NNG_Mining

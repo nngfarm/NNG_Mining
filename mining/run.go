@@ -12,7 +12,6 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/shopspring/decimal"
-	"log"
 	"math/big"
 	"nng_ming/pkg/nng_token"
 	"nng_ming/utils"
@@ -42,21 +41,25 @@ func Run() {
 	// new NNGMiner
 	ethCli, err := ethclient.Dial(*rpc)
 	if err != nil {
-		panic(fmt.Errorf("failed to connect to ethclient: %v", err))
+		fmt.Printf("failed to connect to ethclient: %v", err)
+		return
 	}
 	// Check if pledged
 	nng, err := nng_token.NewNng(nngContract, ethCli)
 	if err != nil {
-		panic(fmt.Errorf("failed to create nng: %v", err))
+		fmt.Printf("failed to create nng: %v", err)
+		return
 	}
 	netWorkId, err := ethCli.NetworkID(context.Background())
 	if err != nil {
-		log.Fatalf("Failed to get network ID: %v\n", err)
+		fmt.Printf("Failed to get network ID: %v\n", err)
+		return
 	}
 	// new keyed transactor
 	transOpts, err := bind.NewKeyedTransactorWithChainID(privateKey, netWorkId)
 	if err != nil {
-		log.Fatalf("Failed to get transact Opts: %s", err.Error())
+		fmt.Printf("Failed to get transact Opts: %s", err.Error())
+		return
 	}
 	// bigZero
 	big100 := utils.AmountToWei(100, 18)
@@ -77,47 +80,50 @@ func Run() {
 		pledge, err := nng.UserPledges(nil, address)
 		if err != nil {
 			fmt.Println("Failed to get pledges, Please try again later.")
+			return
 		}
 		// No pledge
-		if !pledge.IsPledged || pledge.Amount.Cmp(big100) == 0 {
-			// pledge amount < 100
-			fmt.Println("Your pledged NNG: ", utils.WeiToAmount(pledge.Amount, 18))
-			fmt.Println("Please pledge at lease [100 NNG] to start mining.")
+		if pledge.IsPledged && pledge.Amount.Cmp(big100) >= 0 {
+			// start Mining
+			var inputData []byte
+			// get code
+			methodID, _ := hex.DecodeString("0c6008af")
+			// encodeParams
+			paddedAddress := common.LeftPadBytes(address.Bytes(), 32)
+			// inputData
+			inputData = append(inputData, methodID...)
+			inputData = append(inputData, paddedAddress...)
+			// Get address bytecode
+			resData, err := ethCli.CallContract(context.Background(), ethereum.CallMsg{To: &NNG_Factory, Data: inputData}, nil)
+			if err != nil || len(resData) < 64 {
+				fmt.Println("Failed to get bytecode")
+				return
+			}
+			// codeLength
+			codeLength := new(big.Int).SetBytes(resData[32:64]).Uint64()
+			// required > 64+codeLength
+			if len(resData) < 64 + int(codeLength) {
+				fmt.Println("Failed to get bytecode")
+				return
+			}
+			// run
+			miner := NewNngMiner(nng, ethCli, transOpts, *thread)
+			// keccak256(bytecode)
+			miner.Bytecode = crypto.Keccak256Hash(resData[64:64+codeLength]).Bytes()
+			// Recipient
+			miner.Recipient = address
+			// has recipient address
+			if regexp.MustCompile("^0x[0-9a-fA-F]{40}$").MatchString(*recipient) {
+				miner.Recipient = common.HexToAddress(*recipient)
+			}
+			// run miner
+			miner.Run()
 			return
 		}
-		var inputData []byte
-		// get code
-		methodID, _ := hex.DecodeString("0c6008af")
-		// encodeParams
-		paddedAddress := common.LeftPadBytes(address.Bytes(), 32)
-		// inputData
-		inputData = append(inputData, methodID...)
-		inputData = append(inputData, paddedAddress...)
-		// Get address bytecode
-		resData, err := ethCli.CallContract(context.Background(), ethereum.CallMsg{To: &NNG_Factory, Data: inputData}, nil)
-		if err != nil || len(resData) < 64 {
-			fmt.Println("Failed to get bytecode")
-			return
-		}
-		// codeLength
-		codeLength := new(big.Int).SetBytes(resData[32:64]).Uint64()
-		// required > 64+codeLength
-		if len(resData) < 64 + int(codeLength) {
-			fmt.Println("Failed to get bytecode")
-			return
-		}
-		// run
-		miner := NewNngMiner(nng, ethCli, transOpts, *thread)
-		// keccak256(bytecode)
-		miner.Bytecode = crypto.Keccak256Hash(resData[64:64+codeLength]).Bytes()
-		// Recipient
-		miner.Recipient = address
-		// has recipient address
-		if regexp.MustCompile("^0x[0-9a-fA-F]{40}$").MatchString(*recipient) {
-			miner.Recipient = common.HexToAddress(*recipient)
-		}
-		// run miner
-		miner.Run()
+		// pledge amount < 100
+		fmt.Println("Your pledged NNG: ", utils.WeiToAmount(pledge.Amount, 18))
+		fmt.Println("Please pledge at lease [100 NNG] to start mining.")
+		fallthrough
 	case "pledge":
 		var (
 			period          uint8
@@ -133,7 +139,7 @@ func Run() {
 		}
 		// No ether found
 		if balance.Cmp(new(big.Int)) == 0 {
-			fmt.Println("No balance of address")
+			fmt.Println("Insufficient balance of this address")
 			return
 		}
 		// Check if pledged
@@ -149,23 +155,6 @@ func Run() {
 			fmt.Println("Pledge Unlock Time:", pledge.UnlockTime)
 			return
 		}
-		// // Check allowance
-		// allowance, err := nng.Allowance(nil, address, nngContract)
-		// if err != nil {
-		// 	fmt.Println("Failed to get allowance, Please try again later.")
-		// 	return
-		// }
-		// spendAllowance := utils.AmountToWei(1000, 18)
-		// // spend allowance
-		// if allowance.Cmp(spendAllowance) < 0 {
-		// 	// Approve for nngContract if continue
-		// 	alloTx, err := nng.Approve(transOpts, nngContract, spendAllowance)
-		// 	if err != nil {
-		// 		fmt.Println("Failed to approve for NNG contract, Please try again later.")
-		// 		return
-		// 	}
-		// 	fmt.Printf("Granting allowance to NNG contract... \n TxHash: %s, Allowance: %d \n", alloTx.Hash(), 1000)
-		// }
 		// pledge
 		for {
 			fmt.Printf("Pledge Input Your Pledge Amount (Range[100, 1000]): ")
