@@ -19,13 +19,14 @@ import (
 )
 
 const (
-	NNG_VERSION = "0.1.0"
+	NNG_VERSION = "1.0.0"
 )
 
 type KeystoreFile struct {
-	Version  string `json:"version"`
-	Account  string `json:"account"`
-	Mnemonic string `json:"mnemonic"`
+	Version    string `json:"version"`
+	Account    string `json:"account"`
+	Mnemonic   string `json:"mnemonic"`
+	PrivateKey string `json:"privateKey"`
 }
 
 // AccountFromKeystore get the account
@@ -35,18 +36,22 @@ func AccountFromKeystore() (*ecdsa.PrivateKey, error) {
 			fmt.Println("Password Err: ", r)
 		}
 	}()
+	// define privateKey
+	var privateKey *ecdsa.PrivateKey
 	// read private key from .keystore
 	fileContent, err := os.ReadFile(".keystore")
 	// no .keystore file found
 	if err != nil || len(fileContent) == 0 {
 		var (
-			nextStep = 0
-			mnemonic string
+			nextStep   = 0
+			mnemonic   string
+			privateHex string
 		)
 		// Print generate a
 		fmt.Println("1 ==> Generate a new one.")
-		fmt.Println("2 ==> Restore via mnemonic phrase.")
-		fmt.Printf("The .keystore file was not found. Whether to generate a new mnemonic phrase: ")
+		fmt.Println("2 ==> Restore via private key.")
+		fmt.Println("3 ==> Restore via mnemonic phrase.")
+		fmt.Printf("The .keystore file was not found. Whether to generate a new mnemonic phrase [1,2,3]: ")
 		fmt.Scan(&nextStep)
 		// get mnemonic
 		switch nextStep {
@@ -57,6 +62,15 @@ func AccountFromKeystore() (*ecdsa.PrivateKey, error) {
 				return nil, err
 			}
 		case 2:
+			fmt.Printf("Please enter the private key: ")
+			fmt.Scan(&privateHex)
+			// has0x
+			if strings.HasPrefix(privateHex, "0x") {
+				privateHex = privateHex[2:]
+			}
+			// get private key
+			privateKey, _ = crypto.HexToECDSA(privateHex)
+		case 3:
 			fmt.Printf("Please enter the mnemonic phrase: ")
 			scanner := bufio.NewScanner(os.Stdin)
 			if scanner.Scan() {
@@ -73,10 +87,15 @@ func AccountFromKeystore() (*ecdsa.PrivateKey, error) {
 		// read password
 		password := readConsolePassword("Please set a password for the Mnemonic: ")
 		// mnemonic to privateKey
-		privateKey, err := mnemonicToPrivateKey(mnemonic)
-		if err != nil {
-			fmt.Println("Mnemonic to Seed Err: ", err.Error())
-			return nil, err
+		if privateKey == nil {
+			// from mnemonic
+			privateKey, err = mnemonicToPrivateKey(mnemonic)
+			if err != nil {
+				fmt.Println("Mnemonic to Seed Err: ", err.Error())
+				return nil, err
+			}
+			// privateKey
+			privateHex = hex.EncodeToString(crypto.FromECDSA(privateKey))
 		}
 		// to Address
 		address := crypto.PubkeyToAddress(privateKey.PublicKey)
@@ -86,19 +105,27 @@ func AccountFromKeystore() (*ecdsa.PrivateKey, error) {
 		fmt.Println("==========================================================")
 		fmt.Println("VERSION:", NNG_VERSION)
 		fmt.Println("address:", address)
-		fmt.Println("mnemonic:", mnemonic)
-		fmt.Println("privateKey:", "0x" + hex.EncodeToString(crypto.FromECDSA(privateKey)))
+		// has mnemonic
+		if mnemonic != "" {
+			fmt.Println("mnemonic:", mnemonic)
+		}
+		fmt.Println("privateKey:", "0x" + privateHex)
 		fmt.Println("==========================================================")
 		fmt.Println("==========================================================")
 		fmt.Println("Important:", "Remember, anyone who obtains your mnemonic phrase can access your funds. ")
 		fmt.Println("Please take all necessary protective measures.")
 		// write to .keystore
-		enMnemonic := utils.AesEncrypt(mnemonic, string(password))
+		enPrivateKey := utils.AesEncrypt(privateHex, string(password))
 		// set keystore content
 		var k KeystoreFile
 		k.Version = NNG_VERSION
-		k.Mnemonic = enMnemonic
 		k.Account = address.Hex()
+		k.PrivateKey = enPrivateKey
+		// no mnemonic
+		if mnemonic != "" {
+			enMnemonic := utils.AesEncrypt(mnemonic, string(password))
+			k.Mnemonic = enMnemonic
+		}
 		// 序列化数据为 JSON
 		jsonData, err := json.MarshalIndent(k, "", "    ")
 		if err != nil {
@@ -124,18 +151,9 @@ func AccountFromKeystore() (*ecdsa.PrivateKey, error) {
 		var keystore KeystoreFile
 		json.Unmarshal(fileContent, &keystore)
 		// decrypt keystore to private key
-		mnemonic := utils.AesDecrypt(keystore.Mnemonic, string(password))
-		// Split mnemonic
-		if len(strings.Split(mnemonic, " ")) != 12 {
-			fmt.Println("Password Err, Please Try Again")
-			continue
-		}
-		// Check Address
-		privateKey, err := mnemonicToPrivateKey(mnemonic)
-		if err != nil {
-			fmt.Printf("Error occurred during mnemonic decryption. Error: %s", err.Error())
-			continue
-		}
+		privateHex := utils.AesDecrypt(keystore.PrivateKey, string(password))
+		// to private key
+		privateKey, _ = crypto.HexToECDSA(privateHex)
 		// pubkey to address
 		address := crypto.PubkeyToAddress(privateKey.PublicKey)
 		// password failed

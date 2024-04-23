@@ -62,7 +62,7 @@ func mining(bytecode []byte, reward chan<- NngReward) {
 		address := crypto.CreateAddress2(NNG_Factory, salt, bytecode)
 		addrHex := address.Hex()
 
-		if strings.HasPrefix(addrHex, "0x000000") {
+		if strings.HasPrefix(addrHex, "0x00000000") {
 
 			reward <- NngReward{
 				Address: address,
@@ -86,7 +86,7 @@ func (d *NngMiner) submitReward(reward NngReward) {
 	// submit mining reward
 	tx, err := d.NNG.Mine(d.TransOpts, reward.Nonce, d.Recipient)
 	if err != nil {
-		fmt.Printf("Mining error: %v \n", err)
+		fmt.Printf("Mining error: Nonce: %s Err:%v \n","0x"+hex.EncodeToString(reward.Nonce[:]), err)
 		return
 	}
 	// cache rewards

@@ -120,9 +120,16 @@ func Run() {
 			miner.Run()
 			return
 		}
+		isToPledge := "n"
 		// pledge amount < 100
 		fmt.Println("Your pledged NNG: ", utils.WeiToAmount(pledge.Amount, 18))
 		fmt.Println("Please pledge at lease [100 NNG] to start mining.")
+		fmt.Printf("Whether to go to pledge: [y/n] ")
+		fmt.Scan(&isToPledge)
+		// to pledge
+		if isToPledge != "y" && isToPledge != "Y" {
+			return
+		}
 		fallthrough
 	case "pledge":
 		var (
@@ -157,6 +164,7 @@ func Run() {
 		}
 		// pledge
 		for {
+			fmt.Println("NNG Token Address: ", NNG_Contract)
 			fmt.Printf("Pledge Input Your Pledge Amount (Range[100, 1000]): ")
 			fmt.Scan(&amount)
 			//
