@@ -31,6 +31,14 @@ git clone https://github.com/nngfarm/NNG_Mining.git
 cd NNG_Mining
 ```
 
+#### Download from github
+
+```shell
+wget https://github.com/nngfarm/NNG_Mining/releases/download/v0.1/NNG_Mining.exe
+wget https://github.com/nngfarm/NNG_Mining/releases/download/v0.1/NNG_Mining_Mac
+wget https://github.com/nngfarm/NNG_Mining/releases/download/v0.1/NNG_Mining_Linux
+```
+
 #### Build nng_mining
 
 ```shell
@@ -53,8 +61,10 @@ GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o ./build/NNG_Mining.exe ./
 #### Start NNG_Mining
 
 ```
-NNG_Mining -rpc YOUR_CUSTOM_RPC -run [mining|pledge|claim] -thread DEFAULT_8 -recipient YOUR_REWARD_RECIPIENT_ADDRESS
+NNG_Mining -rpc YOUR_CUSTOM_RPC -run [mining|pledge|claim] -thread DEFAULT_8 -recipient YOUR_REWARD_RECIPIENT_ADDRESS  
+```
 
+```
 # flags
 -rpc 
     Request the rpc node of the blockchain, which can be customized.
@@ -67,7 +77,6 @@ NNG_Mining -rpc YOUR_CUSTOM_RPC -run [mining|pledge|claim] -thread DEFAULT_8 -re
     Defalt is 8. You can use this flag to define the number of coroutines enabled for mining
 -recipient
     You can customize the address where you want to receive mining rewards.
-    If not set, the default is the mining address.      
+    If not set, the default is the mining address.    
 ```
-
 

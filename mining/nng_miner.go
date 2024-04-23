@@ -87,6 +87,13 @@ func (d *NngMiner) submitReward(reward NngReward) {
 	tx, err := d.NNG.Mine(d.TransOpts, reward.Nonce, d.Recipient)
 	if err != nil {
 		fmt.Printf("Mining error: Nonce: %s Err:%v \n","0x"+hex.EncodeToString(reward.Nonce[:]), err)
+		// err contain Block_Mining_Limit
+		if strings.Contains(err.Error(), "Block_Mining_Limit") {
+			// set mintTime
+			if mintTime, err := d.NNG.UserLastMintTime(nil, d.TransOpts.From); err == nil {
+				d.LastSubmitTime = mintTime.Int64()
+			}
+		}
 		return
 	}
 	// cache rewards
