@@ -28,6 +28,8 @@ But more Easter egg benefits are waiting to be mined.
    - Buy From PancakeSwap/Uniswap
    - Pre-sale. Transfer 0.1 BNB/Ether to NNG Contract, you will receive 100 NNG. 
    - Pre-sale. Transfer 1 BNB/Ether to NNG Contract, you will receive 1000 NNG.
+   - Pre-sale. <img width="365" alt="image" src="https://github.com/nngfarm/NNG_Mining/assets/167513451/300c142f-5af5-4d56-b5f0-6c338a6e233e">
+
 - How to start Mining
    - Before mining, you need to pledge [100, 1000] NNG. The pledge operation can be started directly with NNG_Mining for staking.
    - Download NNG_Mining and launch it as follows on your operating system to start mining.  
