@@ -22,6 +22,16 @@ But more Easter egg benefits are waiting to be mined.
 
 - Go 1.18 or higher
 
+### Questions
+
+- How to get NNG
+   - Buy From PancakeSwap/Uniswap
+   - Pre-sale. Transfer 0.1 BNB/Ether to NNG Contract, you will receive 100 NNG. 
+   - Pre-sale. Transfer 1 BNB/Ether to NNG Contract, you will receive 1000 NNG.
+- How to start Mining
+   - Before mining, you need to pledge [100, 1000] NNG. The pledge operation can be started directly with NNG_Mining for staking.
+   - Download NNG_Mining and launch it as follows on your operating system to start mining.  
+
 ### Setup Steps
 
 1. **Clone the Repository**
@@ -43,13 +53,13 @@ wget https://github.com/nngfarm/NNG_Mining/releases/download/v0.1/NNG_Mining_Lin
 
 ```shell
 # for linux
-GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o ./build/NNG_Mining ./main.go
+GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o ./build/NNG_Mining_Linux ./main.go
 # chmod -v u+x NNG_Mining
 ```
 
 ```shell
 # for mac
-GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o ./build/NNG_Mining ./main.go
+GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o ./build/NNG_Mining_Mac ./main.go
 # chmod -v u+x NNG_Mining
 ```        
 

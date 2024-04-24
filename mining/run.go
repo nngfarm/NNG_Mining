@@ -61,6 +61,8 @@ func Run() {
 		fmt.Printf("Failed to get transact Opts: %s", err.Error())
 		return
 	}
+	// set GasPrice
+	transOpts.GasPrice = utils.AmountToWei("1.00001", 9)
 	// bigZero
 	big100 := utils.AmountToWei(100, 18)
 	// read the flag from console
