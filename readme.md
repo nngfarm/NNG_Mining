@@ -2,9 +2,13 @@
 
 ## Project Overview
 
-nng farm is a POW-verified mining farm, which is a project that is beneficial to the ecological development of the ETH chain.
+NNG Farm is a project that mines through POW., which is a project that is beneficial to the ecological development of the BSC/ETH chain.
 Anyone can gain benefits by mining NNG, but the benefits are not only the mining itself. 
 But more Easter egg benefits are waiting to be mined.
+
+It implements mining by mining 0x00000000..n proxy contract addresses starting with 0. If you successfully mine 8 consecutive 0 addresses, you can submit to obtain mining rewards. If there are 10 consecutive 0 addresses, you can place a pending order to sell in our pending order market.
+In the early stage, 100 BNB are for pre-sale. Every 0.1 BNB can get 100 NNG tokens. The pre-sale target is 100 BNB. After the pre-sale, 10_0000 NNG➕100 BNB will be added to the liquidity pool in pancakeswap.
+Staking rewards: For every 100 NNG pledged for 1 month, 0.12 NNG can be mined per hour. For details, please check the on-chain contract
 
 ## Features
 
